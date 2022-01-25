@@ -8,44 +8,20 @@ Erasmus MC University Medical Center Rotterdam, Department of Genetic Identifica
 
 ## Requirements
 
-#### Operating system: tested on Ubuntu 18.04LTS
+#### Operating systems: Rested on Ubuntu 18.04LTS but can work on MacOS and Windows
+#### Software: Make sure to install miniconda3 before to proceed. for additional information see the miniconda compatible to your system. https://docs.conda.io/en/latest/miniconda.html
 
+    
+    # Creates environment with external software, R and python packages
+    conda create -n $PROJECT --file environment.txt -y
+    # Activate environment
+    conda activate $PROJECT
+    # Install last R library
+    Rscript -e 'devtools::install_github("christophergandrud/DataCombine")'
 
-### R: tested on R version 3.6.1 (2019-07-05) -- "Action of the toes"    
-    Install dependencies, you can skip if already installed.
+    # Deactivates environment
+    conda deactivate
     
-    gPCA v1.0
-    dada2 v1.12.1
-    ShortRead v1.42.0
-    Biostrings v.2.52.0
-    optparse v.16.4
-    data.table v.1.12.6 
-    tidyverse v.1.3.0
-    rstatix v0.5.0
-    ggpubr v0.3.0    
-    DataCombine v0.2.21
-
-### Python: Python >=3.6 with conda environment (recommended)
-    
-    $ pip install -r requirements.txt
-    
-    Installation using a conda environment (OPTIONAL)
-    
-    $ conda create --name <env> --file requirements.txt
-    
-    Activates environment
-    $ conda activate <env>
-    
-
-### Tree-based Associative Data Augmentation (TADA) augmentation technique for classifying phenotypes based on the microbiome.
-    
-    $ git clone https://github.com/tada-alg/TADA
-
-### External softwares (TADA preprocessing)
-    MAFFT v7.310 
-    FastTree v2.1.11
-
-
 ## Datasets
     
 Datasets Study Accession numbers: PRJNA434300, PRJNA434312, PRJNA484874
