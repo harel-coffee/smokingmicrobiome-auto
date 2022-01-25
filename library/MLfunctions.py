@@ -126,29 +126,18 @@ def get_random_samples(df_metadata, target,id_samples):
 
 
 def get_test_set(filename_pheno, filename_pos, random_samples_test, 
-                                 model_path, i, feature_selection, id_samples, target):    
+                                 model_path, i, id_samples, target):    
     
-    df_test_pheno = pd.read_csv(filename_pheno, index_col = 0)            
+    df_test_pheno = pd.read_csv(filename_pheno, index_col = 0, sep="\t")            
     df_test_pos = pd.read_csv(filename_pos, index_col=0)    
-    print(random_samples_test)
     df_test_pos = df_test_pos.loc[df_test_pos.index.isin(random_samples_test)]    
     df_test_pheno = df_test_pheno.loc[df_test_pheno[id_samples].isin(df_test_pos.index)]
-    print(df_test_pos)
-    print(df_test_pheno)
-    print(" ---- " )
+        
     df_test_pos = df_test_pos.loc[df_test_pheno[id_samples]]        
-    df_test_pos = total_sum(df_test_pos)    
-    #print(len(feature_selection))
-    #print(type(feature_selection))    
-    #print(df_test_pos.shape)
-    if type(feature_selection) == np.ndarray: # feature selection is true        
-        df_test_pos = df_test_pos[feature_selection]
-    #print(df_test_pos.shape)
-    print(df_test_pheno.shape)
+    df_test_pos = total_sum(df_test_pos)        
     y_test_labels = df_test_pheno[target].values            
     y_test = y_test_labels
-    X_test = df_test_pos.values                   
-    print(y_test_labels)
+    X_test = df_test_pos.values                       
     y_test = LabelBinarizer().fit_transform(y_test_labels)    
     if len(set(y_test_labels)) == 3:
         y_test = np.argmax(y_test, axis=1)
@@ -181,15 +170,8 @@ def get_test_set(filename_pheno, filename_pos, random_samples_test,
             y_real.append(1)
         elif "never" in i:
             y_real.append(1)
-    y_real = np.array(y_real)
-    #out_report = classification_report(y_real,y_pred, output_dict = False, 
-    #                                   target_names = ["smoker", "non-smoker"])
-    #print(out_report)
-    mcc_score, auc_score, cnf_matrix = get_metrics_classification(y_real, y_pred, y_probs_final)    
-    #print("AUC: {}".format(auc_score[0]))
-    #print("MCC: {}".format(mcc_score))
-    #print(cnf_matrix)
-    #print("--------------------------------------")
+    y_real = np.array(y_real)    
+    mcc_score, auc_score, cnf_matrix = get_metrics_classification(y_real, y_pred, y_probs_final)        
     return mcc_score, auc_score
     
 
@@ -280,27 +262,16 @@ def tada_augmentation(X_train, y_train, obs_ids, i, tree_newick):
     if not os.path.exists(folder):        
         cmd = "mkdir -p {}".format(output)
         subprocess.check_output(cmd, shell = True)    
-    '''
-    if os.path.exists(folder):
-        cmd = "rm {}/*.biom {}/*.csv".format(output, output)
-        subprocess.check_output(cmd, shell = True)
-        cmd = "rm {}*.biom {}*.csv".format(folder, folder)
-        subprocess.check_output(cmd, shell = True)
-    else:
-        cmd = "mkdir -p {}".format(output)    
-        subprocess.check_output(cmd, shell = True)
-    '''
+    
     fold_biom = folder + str(i) + ".biom"
     with biom.util.biom_open(fold_biom, "w") as f:
         otu_table.to_hdf5(f,"example")    
-    labels_train = folder + "labels.csv"
-    pd.DataFrame(y_train).to_csv(labels_train, header = False)    
-    # Execute TADA
-    #cmd = "python /media/disk1/diego/software/TADA/src/utils/python/TADA_microbiom.py -t {} \
-    #                    -b {} -o {} -g {}".format(tree_newick, fold_biom, output, labels_train)        
-    cmd = "python TADA/src/utils/python/TADA_microbiom.py -t {} \
-                        -b {} -o {} -g {}".format(tree_newick, fold_biom, output, labels_train)        
+    labels_train = folder + "labels.tsv"
+    pd.DataFrame(y_train).to_csv(labels_train, header = False, sep="\t")    
     
+    # Execute TADA    
+    cmd = "python TADA/src/utils/python/TADA_microbiom.py -t {} \
+                        -b {} -o {} -g {}".format(tree_newick, fold_biom, output, labels_train)            
     subprocess.check_output(cmd, shell = True)    
     
     input_biom = output + "/" + str(i) + ".biom" 
@@ -316,7 +287,7 @@ def tada_augmentation(X_train, y_train, obs_ids, i, tree_newick):
     df_aug_biom = pd.read_csv(biom_aug_tsv, skiprows=[0], sep= "\t", index_col=0)
               
     labels = []
-    tmp = [line.rstrip('\n') for line in open(output + "/labels.csv")]
+    tmp = [line.rstrip('\n') for line in open(output + "/labels.tsv")]
     for line in tmp:
         labels.append(int(line.split("\t")[-1]))
     tmp = [line.rstrip('\n') for line in open(output + "/augmented_meta_data.csv")]
@@ -361,8 +332,7 @@ def smote_both(X_train, y_train):
 
 def adasyn_both(X_train, y_train):
                 
-    t = round(abs(min(dict(Counter(y_train)).values()) - max(dict(Counter(y_train)).values())))
-    
+    t = round(abs(min(dict(Counter(y_train)).values()) - max(dict(Counter(y_train)).values())))    
     t_min = min(dict(Counter(y_train)).values())
     t_max = max(dict(Counter(y_train)).values())        
     over = ADASYN(sampling_strategy=(t-t_min)/t_max)

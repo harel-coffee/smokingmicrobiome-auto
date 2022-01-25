@@ -55,15 +55,10 @@ def get_arguments():
     parser.add_argument("-id", "--id", dest = "id", required = True,
         help="Column id sample names on the column of metadata e.g. SRR or Samples", metavar="STRING")
 
-
     parser.add_argument("-t", "--threads",  dest="threads", default = 4, type = int,
         help="threads to be used during Nested Cross-Validation e.g. 4", 
         metavar="INT", required=False) 
-
-    parser.add_argument("-f", "--feature",  dest = "flag_feature_selection",
-        help = "Enable feature selection with Mann-Whitney U test and Benjamini-Hochberg\
-        for correction [True, False] e.g. True", metavar="bool", required = False, default = False)    
-
+    
     parser.add_argument("-r", "--root-tree", dest="tree_newick", required = False, default = False,
         help="Rooted tree in newick format from ASV consensus e.g. data/TADA/taxa_species_tree.nwk", 
         metavar="FILE")
@@ -101,8 +96,7 @@ if __name__ == "__main__":
     output_dir = args.output_dir + "/"
     filename_pheno = args.filename_pheno
     
-    ## optionals
-    flag_feature_selection = args.flag_feature_selection            
+    ## optionals    
     tree_newick = args.tree_newick    
     methods = args.augmented
     estimators = args.model
@@ -127,11 +121,7 @@ if __name__ == "__main__":
     
     print("Input taxa species: {}".format(filename_pos))
     print("Output directory: {}".format(output_dir))
-    print("Metadata: {}".format(filename_pheno))
-    
-    
-    #print(flag_feature_selection)
-    #print(tree_newick)
+    print("Metadata: {}".format(filename_pheno))    
     print("You selected the following model(s):")    
     print(" ".join(estimators))
     print("You selected the following augmentation method(s):")    
@@ -141,51 +131,18 @@ if __name__ == "__main__":
     flag_export_model = False
     # If true export models and test set from nestedCV
     if len(estimators) == 1 == len(methods):        
-        flag_export_model = True
-       
-    feature_selection = True
-    '''
-    filename_pos = "data/species_intersect.csv"
-    output_dir = "data/results/"
-    filename_pheno = "data/metadata.csv"    
-    ## optionals
-    threads = 35 # default 4
-    # Implement feature selection or not True or False    
-    flag_feature_selection = True    # default True
-    # If no tree is given will skip TADA
-    tree_newick = "/media/disk1/diego/genid/smoking-microbiome/data/TADA/taxa_species_tree.nwk"    #optional     
-    #estimators = ["LR", "KNN", "DT", "SVMR", "SVML", "RF", "XG"]
-    #methods = ["DEFAULT", "ADASYN_over", "ADASYN_both", "SMOTE_both",  "SMOTE_over", "TADA"]    
-    estimators = ["SVML"]
-    methods = ["TADA"]
-    iterations = 1
-    '''
-    create_tmp_dirs(output_dir)    
-    ### feature selection and retrieve taxas        
-    if flag_feature_selection == 'True':              
-        cmd = "python feature_selection.py {} {} {} {}".format(output_dir,
-                                                            filename_pos, 
-                                                            filename_pheno,
-                                                            target,
-                                                            id_samples)
-        subprocess.check_call(cmd, shell = True)
-        print("--- feature selection ---")
-        feature_selection = output_dir + "feature_selection/features.txt"                
-        feature_selection = pd.read_csv(feature_selection, header = None)[0].values
-        #print(feature_selection)
-        print("Done")
-    else:        
-        feature_selection = False          
+        flag_export_model = True                   
+    create_tmp_dirs(output_dir)        
     mcc_test_list = []
     auc_test_list = []    
     pd_all_metrics = pd.DataFrame()    
     for i in range(iterations):
         print(i+1)
-        df_metadata = pd.read_csv(filename_pheno, index_col = 0)                 
+        df_metadata = pd.read_csv(filename_pheno, index_col = 0, sep="\t")
         df_pos = pd.read_csv(filename_pos, index_col=0)    
         taxas = df_pos.columns
         df_pos.columns = list(range(1, len(df_pos.columns)+1))
-        
+        print(df_metadata.head())
         random_samples_test = func.get_random_samples(df_metadata, target, id_samples)        
         df_pos = df_pos.loc[~df_pos.index.isin(random_samples_test)] # ignore test samples ~            
         #print(random_samples_test)
@@ -249,14 +206,7 @@ if __name__ == "__main__":
                     elif choose == "SMOTE_over":                      
                         X_train, y_train = SMOTE().fit_resample(X_train, y_train)                                                        
                     X_train = func.total_sum(pd.DataFrame(X_train)).values                        
-                    X_test = func.total_sum(pd.DataFrame(X_test)).values                      
-                
-                    if flag_feature_selection == 'True':                        
-                        X_train = pd.DataFrame(X_train, columns=taxas)
-                        X_train = X_train[feature_selection].values
-                        X_test = pd.DataFrame(X_test, columns=taxas)
-                        X_test = X_test[feature_selection].values
-                                        
+                    X_test = func.total_sum(pd.DataFrame(X_test)).values                                                        
                     pd_model = pd.concat([pd_model, pd.DataFrame(X_train)])    
                     
                     list_labels.append(y_train)        
@@ -298,11 +248,7 @@ if __name__ == "__main__":
                         model_path = output_dir + "/Model/"
                         create_tmp_dirs(model_path)
                         joblib.dump(best_algo, model_path + "model_" + str(i) + "_"
-                                    + str(fold) + ".model")                
-                        print(best_algo.best_params_)
-                        #best_algo.best_estimator_
-                        #best_algo.best_score_                  
-                
+                                    + str(fold) + ".model")                                                                
                     y_pred = best_algo.predict(X_test)
                     y_probs = best_algo.predict_proba(X_test)        
                     test_mcc, test_auc, test_cnf_matrix = func.get_metrics_classification(y_test, y_pred, y_probs)    
@@ -326,66 +272,8 @@ if __name__ == "__main__":
                     warnings.simplefilter('ignore')    
                     pd_all_metrics = pd.concat([pd_all_metrics, func.process_metrics_df(metrics_models, choose)])        
         if flag_export_model:
-            mcc_test, auc_test = func.get_test_set(filename_pheno, filename_pos, random_samples_test, model_path, i, feature_selection, id_samples, target)
+            mcc_test, auc_test = func.get_test_set(filename_pheno, filename_pos, random_samples_test, model_path, i, id_samples, target)
             mcc_test_list.append(mcc_test)
             auc_test_list.append(auc_test[0])    
     
-    '''
     
-    result = " Mean NestedCV train"
-    result += "\n"
-    for type_ in set(pd_all_metrics["type"]):            
-        result += type_
-        result += "\n"                
-        for model in  set(pd_all_metrics["model"]):
-            result +=  model
-            result += "\n"                
-            mcc_mean = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
-                                (pd_all_metrics["type"] == type_)]["mcc"].mean()
-            mcc_std = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
-                                (pd_all_metrics["type"] == type_)]["mcc"].std()                    
-            auc_mean = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
-                                (pd_all_metrics["type"] == type_)]["auc"].mean()
-            auc_std = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
-                                (pd_all_metrics["type"] == type_)]["auc"].std()
-            result += "MCC mean: {} Std: {} +/-".format(mcc_mean, mcc_std)
-            result += "\n"                
-            result += "AUC mean: {} Std: {} +/-".format(auc_mean, auc_std)
-            result += "\n"
-            result += "-" * 50
-            result += "\n"        
-        result += "-" * 50
-        result += "\n"
-    
-    
-    if not flag_export_model:
-        file_mean_results = "mean_results_train.txt"
-        pd_all_metrics.to_csv(output_dir + "NestedCV_train_results.csv", sep="\t")        
-        plt.figure(figsize=(20, 15))
-        x = sns.boxplot(x="mcc", y="model", hue="type", data=pd_all_metrics, 
-                    dodge=True, linewidth=1.2, palette = "Set3")
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.savefig(output_dir + "mcc_boxplot.png")
-        
-        plt.figure(figsize=(20, 15))
-        x = sns.boxplot(x="auc", y="model", hue="type", data=pd_all_metrics, 
-                    dodge=True, linewidth=1.2, palette = "Set3")
-        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.savefig(output_dir + "auc_boxplot.png")
-    
-    if flag_export_model:
-        file_mean_results = "mean_results_test.txt"
-        pd_all_metrics.to_csv(output_dir + "NestedCV_test_results.csv", sep="\t")        
-        result += "\nTest set"
-        result += "\n"
-        result += 'MCC: {} std +/- {}'.format(np.mean(mcc_test_list), np.std(mcc_test_list))
-        result += "\n"
-        result += 'AUC: {} std +/- {}'.format(np.mean(auc_test_list), np.std(auc_test_list))
-        result += "\n"        
-        
-    with open(output_dir + file_mean_results, 'w+') as f:
-        f.write(result)
-   
-    print("-- NestedCV pipeline finished---")
-    print("Check {} for output generated!".format(output_dir))
-    '''
