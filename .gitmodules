@@ -1,0 +1,3 @@
+[submodule "TADA"]
+	path = TADA
+	url = git://github.com/tada-alg/TADA/
