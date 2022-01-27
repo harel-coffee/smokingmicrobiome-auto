@@ -6,9 +6,14 @@
 Erasmus MC University Medical Center Rotterdam, Department of Genetic Identification, Rotterdam, The Netherlands.
 
 
+    This repository contains a general Machine Learning Classifier workflow meant to be used for microbiome data, where the sample size (n) of the phenotypes/labels/classes of interest is unbalanaced. 
+    You can select among several Machine Learning Classifiers to be used in your data. 
+    We implemented a Nested Cross-Validation method together with augmentation techniques such as SMOTE, ADASYN, and [TADA](https://github.com/tada-alg/TADA/) [https://doi.org/10.1093/bioinformatics/btz394]
+
+
 ## Requirements
 
-#### Operating systems: Rested on Ubuntu 18.04LTS but can work on MacOS and Windows
+#### Operating systems: Tested on Ubuntu 18.04LTS but can work on MacOS and Windows
 #### Software: Make sure to install miniconda3 before to proceed. for additional information see the miniconda compatible to your system. https://docs.conda.io/en/latest/miniconda.html
 
     # Please run the following three steps (compulsory)
@@ -16,9 +21,7 @@ Erasmus MC University Medical Center Rotterdam, Department of Genetic Identifica
     conda create -n $PROJECT --file environment.txt -y
     # 2) Activate environment
     conda activate $PROJECT
-    # 3) Install last R library
-    Rscript -e 'devtools::install_github("christophergandrud/DataCombine")'
-
+    
     # Deactivates environment (optional)
     conda deactivate
     
@@ -33,20 +36,16 @@ The study samples used can be found as the following Accession numbers: PRJNA434
 
 ### Scripts and pipelines
 
-* *cutadapt.R*: Remove adapters and primers for each of the two studies.
+#### TADA preprocessing (optional)
 
-* *DADA2_pipeline*: Pipeline for taxaonomy assignation at species level for each study separately (https://benjjneb.github.io/dada2/tutorial.html).
-
-* *batchEffect.R*: Assess for batch effects after dereplication and taxonomic assignation in Amplicon Sequence Variant (ASV) using guided Principal Component Analysis (gPCA).
-
-#### TADA preprocessing
+    TADA is a 
 
 * *ASV_consensus.R*: Generate consensus sequencing by multiple sequence alignemnt (DECIPHER) for each read taxonomic assignation (DADA2 pipeline).
 
 * *TADA_preprocess.py*: Produce a rooted guided tree in newick format (FastTree).
 
 
-### Machine Learning Classifier workflow
+#### Machine Learning Classifier workflow
 
 * *NestedCV_pipeline.py*: Pipeline for Nested Cross-Validation using several Machine Learning models including: 
 Logistic Regression, K-nearest neighbors, Decision Trees, Support Vector Machines Radial, Support Vector Machine Linear, Random Forest, XGBoosting
