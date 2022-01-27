@@ -1,2 +1,14 @@
 tmp/
 output/
+DADA2_pipeline.R
+batchEffect.R
+compare_groups.R
+cutadapt.R
+data/PRJNA434300-PRJNA434312_species_eHOMD.csv
+data/PRJNA434300-PRJNA434312_taxas_eHMOD.csv
+data/PRJNA484874_species_eHOMD.csv
+data/PRJNA484874_taxas_eHMOD.csv
+data/Species_feature_selection_consensus.csv
+data/batch_effct_pca.csv
+data/metadata.csv
+feature_selection.py
