@@ -16,10 +16,10 @@
 #############################
 ### input data
 #############################
-filename <- "data/species_intersect.csv"
-PRJNA434300.PRJNA434312.taxas <- "data/PRJNA434300-PRJNA434312_taxas_eHMOD.csv"
-PRJNA484874.taxas <- "data/PRJNA484874_taxas_eHMOD.csv"
-output.dir <- "data/"
+filename <- "data/species_intersect.csv" # input ASV
+file_taxas <- "data/taxas_eHMOD.csv" # taxas input from DADA2
+output.dir <- "data/" # output folder
+
 setwd(".")
 
 # Verify if library is correctly installed
@@ -59,12 +59,15 @@ process.df <- function(df){
 
 df.taxa <- fread(filename, header = T)
 df.taxa <- process.df(df.taxa)
-s1.taxas <- fread(PRJNA434300.PRJNA434312.taxas, header = T)
-s5.taxas <- fread(PRJNA484874.taxas, header = T)
-taxas <- rbind(s1.taxas, s5.taxas)
+taxas <- fread(file_taxas, header = T)
 taxas <- process.df(taxas)
+taxas.species.merged <- paste(taxas[,1],taxas[,2],taxas[,3],
+                              taxas[,4],taxas[,5],taxas[,6],
+                              taxas[,7], sep="_")
+taxas$species.merged <- taxas.species.merged
 taxas.OTU <- taxas
 
+#### how define for which taxa to be used
 if(grepl("species", filename)){
   clusters <- as.data.frame(cbind(taxas$species.merged, rownames(taxas)))
   taxas.OTU$genus.merged <- NULL
