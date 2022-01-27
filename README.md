@@ -6,7 +6,7 @@
 Erasmus MC University Medical Center Rotterdam, Department of Genetic Identification, Rotterdam, The Netherlands.
 
 
-This repository contains a general Machine Learning Classifier workflow meant to be used for microbiome data, where the sample size (n) of the phenotypes/labels/classes of interest is unbalanaced. 
+This repository contains a general Machine Learning Classifier workflow meant to be used for microbiome data, where the sample size *(n)* of the phenotypes/labels/classes of interest is unbalanaced. 
 You can select among several Machine Learning Classifiers to be used in your data. 
 We implemented a Nested Cross-Validation method together with augmentation techniques such as SMOTE, ADASYN,and [TADA](https://github.com/tada-alg/TADA/) [https://doi.org/10.1093/bioinformatics/btz394]
 
@@ -65,14 +65,59 @@ python TADA_preprocess.py -c taxas_consensus.csv -i species.csv -o out_dir
 Logistic Regression, K-nearest neighbors, Decision Trees, Support Vector Machines Radial, Support Vector Machine Linear, Random Forest, XGBoosting
 with additional data augmentation methods such as ADASYN, SMOTE, and TADA
 
+
+```
+python NestedCV_pipeline.py -h
+```
+
+Here is the help function:
+```
+usage: NestedCV_pipeline.py [-h] -i FILE -o PATH -m FILE -target STRING -id
+                            STRING [-t INT] [-r FILE] [-ml MODEL]
+                            [-a AUGMENTED] [-iter INT]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i FILE, --input FILE
+                        table taxa species e.g. data/species_intersect.csv.
+                        Taxa as columns, sample names as rows
+  -o PATH, --output PATH
+                        output folder name e.g. data/output/
+  -m FILE, --metadata FILE
+                        table with metadata data/metadata.csv
+  -target STRING, --target STRING
+                        Target phenotype name based on the column of metadata
+                        e.g. smoking
+  -id STRING, --id STRING
+                        Column id sample names on the column of metadata e.g.
+                        SRR or Samples
+  -t INT, --threads INT
+                        threads to be used during Nested Cross-Validation e.g.
+                        4
+  -r FILE, --root-tree FILE
+                        Rooted tree in newick format from ASV consensus e.g.
+                        data/TADA/taxa_species_tree.nwk
+  -ml MODEL, --ml-model MODEL
+                        Machine learning models, if more than one is selected
+                        implements NestedCV and reports output and prediction
+                        estimations using MCC and AUC, otherwise you can
+                        select one to export as final model (also needs to be
+                        selected an augmented data type) [LR, KNN, DT, SVMR,
+                        SVML, RF, XG] e.g. LR,KNN,RF or e.g. SVML (will
+                        generate one model and export)
+  -a AUGMENTED, --augmented AUGMENTED
+                        Data type augmented technique, if no type is selected
+                        uses all data types [DEFAULT, ADASYN_over,
+                        ADASYN_both, SMOTE_both, SMOTE_over, TADA]
+  -iter INT, --iterations INT
+                        number of iterations [DEFAULT:10]
+```
+
 *Example*
 
 ```
-python NestedCV_pipeline.py -i species.csv -m metada.tsv -o out_dir
-
-# For additional parameters see python NestedCV_pipeline.py --help
+python NestedCV.py -i species.csv -m metadata.tsv -o out_dir
 ```
-
 
 
 contact at genid@erasmusmc.nl for any questions or issues concerning the scripts.
