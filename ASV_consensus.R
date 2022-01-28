@@ -11,17 +11,7 @@
 ###########                                                       ###########
 #############################################################################
 #############################################################################
-
 ### setwd("genid/smoking-microbiome/") # set project as working directory
-#############################
-### input data
-#############################
-filename <- "data/species_intersect.csv" # input ASV
-file_taxas <- "data/taxas_eHMOD.csv" # taxas input from DADA2
-output.dir <- "data/" # output folder
-
-setwd(".")
-
 # Verify if library is correctly installed
 pkgTest <- function(x)
 {
@@ -38,6 +28,37 @@ pkgTest("Biostrings")
 pkgTest("doParallel")
 pkgTest("DECIPHER")
 pkgTest("foreach")
+pkgTest("optparse")
+
+#############################
+### input data
+#############################
+
+option_list = list(
+  make_option(c("-s", "--species"), type="character", default=NULL, 
+              help="ASV at the Species-level, output from DADA2", 
+              metavar="character"),
+  make_option(c("-t", "--taxas"), type="character", default=NULL, 
+              help="Input file of assigned taxas from DADA2 pipeline, at the
+              Species-level", 
+              metavar="character"),
+  make_option(c("-o", "--output"), type="character", default=NULL, 
+              help="output folder", 
+              metavar="character")
+);
+
+
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+
+file.asv <- "data/species_intersect.csv" # input ASV
+file.taxas <- "data/taxas_eHMOD.csv" # taxas input from DADA2
+output.dir <- "data/" # output folder
+setwd(".")
+file.asv <- opt$species
+file.taxas <- opt$taxas
+path.out <- opt$output
+
 
 # functions
 get.consensus <- function(seqs){
@@ -57,9 +78,9 @@ process.df <- function(df){
 }
 
 
-df.taxa <- fread(filename, header = T)
+df.taxa <- fread(file.asv, header = T)
 df.taxa <- process.df(df.taxa)
-taxas <- fread(file_taxas, header = T)
+taxas <- fread(file.taxas, header = T)
 taxas <- process.df(taxas)
 taxas.species.merged <- paste(taxas[,1],taxas[,2],taxas[,3],
                               taxas[,4],taxas[,5],taxas[,6],
@@ -68,18 +89,14 @@ taxas$species.merged <- taxas.species.merged
 taxas.OTU <- taxas
 
 #### how define for which taxa to be used
-if(grepl("species", filename)){
-  clusters <- as.data.frame(cbind(taxas$species.merged, rownames(taxas)))
-  taxas.OTU$genus.merged <- NULL
-  taxas.OTU <- taxas.OTU[taxas.OTU$species.merged %in% colnames(df.taxa), ]
-  table(duplicated(taxas.OTU))
-  taxas.OTU = taxas.OTU[!duplicated(taxas.OTU$species.merged),]
-  print(table(taxas.OTU$species.merged == colnames(df.taxa)))
-  taxas.OTU$species.merged <- NULL
-}else{
-  print("Error!, something failed check the format of the taxas files")
-  stop()
-}
+
+clusters <- as.data.frame(cbind(taxas$species.merged, rownames(taxas)))
+taxas.OTU$genus.merged <- NULL
+taxas.OTU <- taxas.OTU[taxas.OTU$species.merged %in% colnames(df.taxa), ]
+table(duplicated(taxas.OTU))
+taxas.OTU = taxas.OTU[!duplicated(taxas.OTU$species.merged),]
+print(table(taxas.OTU$species.merged == colnames(df.taxa)))
+taxas.OTU$species.merged <- NULL
 
 
 colnames(clusters) <- c("cluster", "sequence")
@@ -101,10 +118,6 @@ list.seqs.cons <- matrix(unlist(list.seqs.cons), ncol = 1, byrow = TRUE)
 rownames(list.seqs.cons) <- taxas
 colnames(list.seqs.cons) <- "sequence"
 table(colnames(df.taxa) == rownames(list.seqs.cons))
-
 rownames(taxas.OTU) <- as.vector(list.seqs.cons[,1])
+write.csv(list.seqs.cons, file=paste0(output.dir,"Species_OTU_seqs_consensus.csv"), quote = F)
 
-if(grepl("species", filename)){
-  write.csv(list.seqs.cons, file=paste0(output.dir,"Species_OTU_seqs_consensus.csv"), quote = F)
-  write.csv(taxas.OTU, file=paste0(output.dir, "Species_OTU_diversity.csv"), quote = F)
-}
