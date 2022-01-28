@@ -11,54 +11,6 @@
 ###########                                                       ###########
 #############################################################################
 #############################################################################
-### setwd("genid/smoking-microbiome/") # set project as working directory
-# Verify if library is correctly installed
-pkgTest <- function(x)
-{
-  if (!require(x,character.only = TRUE))
-  {
-    install.packages(x,dep=TRUE)
-    if(!require(x,character.only = TRUE)) stop("Package not found")
-  }
-}
-
-# loading libraries
-pkgTest("data.table")
-pkgTest("Biostrings")
-pkgTest("doParallel")
-pkgTest("DECIPHER")
-pkgTest("foreach")
-pkgTest("optparse")
-
-#############################
-### input data
-#############################
-
-option_list = list(
-  make_option(c("-s", "--species"), type="character", default=NULL, 
-              help="ASV at the Species-level, output from DADA2", 
-              metavar="character"),
-  make_option(c("-t", "--taxas"), type="character", default=NULL, 
-              help="Input file of assigned taxas from DADA2 pipeline, at the
-              Species-level", 
-              metavar="character"),
-  make_option(c("-o", "--output"), type="character", default=NULL, 
-              help="output folder", 
-              metavar="character")
-);
-
-
-opt_parser = OptionParser(option_list=option_list);
-opt = parse_args(opt_parser);
-
-file.asv <- "data/species_intersect.csv" # input ASV
-file.taxas <- "data/taxas_eHMOD.csv" # taxas input from DADA2
-output.dir <- "data/" # output folder
-setwd(".")
-file.asv <- opt$species
-file.taxas <- opt$taxas
-path.out <- opt$output
-
 
 # functions
 get.consensus <- function(seqs){
@@ -77,11 +29,85 @@ process.df <- function(df){
   return(df)
 }
 
+# Verify if library is correctly installed
+pkgTest <- function(x)
+{
+  if (!require(x,character.only = TRUE))
+  {
+    install.packages(x,dep=TRUE)
+    if(!require(x,character.only = TRUE)) stop("Package not found")
+  }
+}
+
+# loading libraries
+pkgTest("optparse")
+#############################
+### input data
+#############################
+
+option_list = list(
+  make_option(c("-s", "--species"), type="character", default=NULL, 
+              help="ASV at the Species-level, output from DADA2", 
+              metavar="character"),
+  make_option(c("-t", "--taxas"), type="character", default=NULL, 
+              help="Input file of assigned taxas from DADA2 pipeline, at the
+              Species-level", 
+              metavar="character"),
+  make_option(c("-o", "--output"), type="character", default=NULL, 
+              help="output folder", 
+              metavar="character")
+);
+
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+#-------------------------------------
+file.asv <- opt$species
+file.taxas <- opt$taxas
+output.dir <- opt$output
+
+#file.asv <- "data/species.csv" # input ASV
+#file.taxas <- "data/taxas_eHMOD.csv" # taxas input from DADA2
+#output.dir <- "output_2/" # output folder
+
+
+pkgTest("data.table")
+pkgTest("Biostrings")
+pkgTest("doParallel")
+pkgTest("DECIPHER")
+pkgTest("foreach")
+
 
 df.taxa <- fread(file.asv, header = T)
 df.taxa <- process.df(df.taxa)
 taxas <- fread(file.taxas, header = T)
 taxas <- process.df(taxas)
+
+
+setwd(".")
+mainDir <- getwd()
+subDir <- output.dir
+
+if (file.exists(paste(mainDir, subDir, "/", sep = "/", collapse = "/"))) {
+  cat("subDir exists in mainDir and is a directory")
+} else if (file.exists(paste(mainDir, subDir, sep = "/", collapse = "/"))) {
+  cat("subDir exists in mainDir but is a file")
+  # you will probably want to handle this separately
+} else {
+  cat("subDir does not exist in mainDir - creating")
+  dir.create(file.path(mainDir, subDir))
+}
+
+if (file.exists(paste(mainDir, subDir, "/", sep = "/", collapse = "/"))) {
+  # By this point, the directory either existed or has been successfully created
+  setwd(file.path(mainDir, subDir))
+} else {
+  cat("subDir does not exist")
+  # Handle this error as appropriate
+}
+
+getwd()
+
+
 taxas.species.merged <- paste(taxas[,1],taxas[,2],taxas[,3],
                               taxas[,4],taxas[,5],taxas[,6],
                               taxas[,7], sep="_")
@@ -119,5 +145,7 @@ rownames(list.seqs.cons) <- taxas
 colnames(list.seqs.cons) <- "sequence"
 table(colnames(df.taxa) == rownames(list.seqs.cons))
 rownames(taxas.OTU) <- as.vector(list.seqs.cons[,1])
-write.csv(list.seqs.cons, file=paste0(output.dir,"Species_OTU_seqs_consensus.csv"), quote = F)
+#write.csv(list.seqs.cons, file=paste0(output.dir,"Species_OTU_seqs_consensus.csv"), quote = F)
+write.csv(list.seqs.cons, file=paste0("Species_OTU_seqs_consensus.csv"), quote = F)
+
 

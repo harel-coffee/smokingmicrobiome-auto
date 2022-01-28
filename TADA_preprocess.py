@@ -19,16 +19,26 @@ def get_arguments():
 
     parser = ArgumentParser()    
     parser.add_argument("-c", "--consensus",  dest="consensus",
-            help="Species_OTU_seqs_consensus.csv", metavar="FILE", required=True)    
+            help="output/Species_OTU_seqs_consensus.csv", metavar="FILE", required=True)    
     parser.add_argument("-s", "--species",  dest="species",
-            help="species_intersect.csv", metavar="FILE", required=True)        
+            help="data/species.csv", metavar="FILE", required=True)        
     parser.add_argument("-o", "--tada_out",  dest="tada_out",
-            help="data/TADA/", metavar="DIR", required=True)                
+            help="output/TADA/", metavar="DIR", required=True)                
     args = parser.parse_args()    
     return args
 
 
+def create_tmp_dirs(folder):
+    
+    if not os.path.isdir(folder):
+        cmd = 'mkdir '+folder
+        subprocess.call(cmd, shell=True)        
+        return True
+
+
 if __name__ == "__main__":
+
+    print("""Creates phylogenetic tree based on taxonomic consensus to be used in TADA""")
 
     args = get_arguments() 
     
@@ -46,6 +56,7 @@ if __name__ == "__main__":
     df_consensus.index == df_pos.columns
 
     c = 1    
+    create_tmp_dirs(tada_output) # if does not exist creates directory
     file_fasta = tada_output + "/taxa_species.fasta"
     file = open(file_fasta,"w")
     list_cols = []

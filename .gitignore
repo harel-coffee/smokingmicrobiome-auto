@@ -1,5 +1,6 @@
 tmp/
 output/
+output_3/
 DADA2_pipeline.R
 batchEffect.R
 compare_groups.R
@@ -13,3 +14,4 @@ data/batch_effct_pca.csv
 data/metadata.csv
 feature_selection.py
 .DS_Store
+data/species_intersect.csv

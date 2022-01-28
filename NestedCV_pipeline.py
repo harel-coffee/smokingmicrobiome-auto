@@ -47,7 +47,7 @@ def get_arguments():
         help = "output folder name e.g. data/output/", metavar = "PATH")            
 
     parser.add_argument("-m", "--metadata", dest = "filename_pheno", required = True,
-        help="table with metadata data/metadata.csv", metavar="FILE")
+        help="table with metadata in Tab-separated values TSV e.g. data/metadata.tsv", metavar="FILE")
 
     parser.add_argument("-target", "--target", dest = "target", required = True,
         help="Target phenotype name based on the column of metadata e.g. smoking", metavar="STRING")
@@ -74,7 +74,7 @@ def get_arguments():
         [DEFAULT, ADASYN_over, ADASYN_both, SMOTE_both,  SMOTE_over, TADA] ")
     
     parser.add_argument("-iter", "--iterations", dest = "iterations", required = False,
-        help="number of iterations [DEFAULT:10]", metavar="INT", type = int, default = 10)
+        help="number of iterations [DEFAULT=10]", metavar="INT", type = int, default = 10)
 
             
     args = parser.parse_args()
