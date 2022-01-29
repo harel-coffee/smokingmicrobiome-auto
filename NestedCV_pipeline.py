@@ -271,9 +271,67 @@ if __name__ == "__main__":
                 with warnings.catch_warnings():
                     warnings.simplefilter('ignore')    
                     pd_all_metrics = pd.concat([pd_all_metrics, func.process_metrics_df(metrics_models, choose)])        
-        if flag_export_model:
+        if flag_export_model: 
             mcc_test, auc_test = func.get_test_set(filename_pheno, filename_pos, random_samples_test, model_path, i, id_samples, target)
             mcc_test_list.append(mcc_test)
             auc_test_list.append(auc_test[0])    
     
+    #<-------------------------------------------------------------
+    result = " Mean NestedCV train"
+    result += "\n"
+    for type_ in set(pd_all_metrics["type"]):            
+        result += "Augmentation technique: {}".format(type_)
+        #result += type_
+        result += "\n"                
+        for model in  set(pd_all_metrics["model"]):
+            result +=  "Model: {}".format(model)
+            #result +=  model
+            result += "\n"                
+            mcc_mean = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
+                                (pd_all_metrics["type"] == type_)]["mcc"].mean()
+            mcc_std = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
+                                (pd_all_metrics["type"] == type_)]["mcc"].std()                    
+            auc_mean = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
+                                (pd_all_metrics["type"] == type_)]["auc"].mean()
+            auc_std = pd_all_metrics.loc[(pd_all_metrics["model"] == model) &
+                                (pd_all_metrics["type"] == type_)]["auc"].std()
+            result += "MCC mean: {} Std: {} +/-".format(round(mcc_mean,3), round(mcc_std,3))
+            result += "\n"                
+            result += "AUC mean: {} Std: {} +/-".format(round(auc_mean,3), round(auc_std,3))
+            result += "\n"
+            result += "-" * 50
+            result += "\n"
+        result += "-" * 50
+        result += "\n"    
     
+    if not flag_export_model:
+        file_mean_results = "mean_results_train.txt"
+        pd_all_metrics.to_csv(output_dir + "NestedCV_train_results.csv", sep="\t")        
+        plt.figure(figsize=(20, 15))
+        x = sns.boxplot(x="mcc", y="model", hue="type", data=pd_all_metrics, 
+                    dodge=True, linewidth=1.2, palette = "Set3")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.savefig(output_dir + "mcc_boxplot.png")
+        
+        plt.figure(figsize=(20, 15))
+        x = sns.boxplot(x="auc", y="model", hue="type", data=pd_all_metrics, 
+                    dodge=True, linewidth=1.2, palette = "Set3")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.savefig(output_dir + "auc_boxplot.png")
+    
+    if flag_export_model:
+        file_mean_results = "mean_results_test.txt"
+        pd_all_metrics.to_csv(output_dir + "NestedCV_test_results.csv", sep="\t")        
+        result += "\nTest set"
+        result += "\n"
+        result += 'MCC: {} std +/- {}'.format(np.mean(mcc_test_list), np.std(mcc_test_list))
+        result += "\n"
+        result += 'AUC: {} std +/- {}'.format(np.mean(auc_test_list), np.std(auc_test_list))
+        result += "\n"        
+        
+    with open(output_dir + file_mean_results, 'w+') as f:
+        f.write(result)
+   
+    print("-- NestedCV pipeline finished---")
+    print("Check {} for output generated!".format(output_dir))
+

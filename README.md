@@ -67,18 +67,15 @@ Options:
 	-h, --help
 		Show this help message and exit
 
-Rscript --vanilla ASV_consensus.R -i species.csv -d taxas_eHOMD.csv -o out_dir 
 ```
 *Example*
 
 ```
 $ Rscript --vanilla ASV_consensus.R -s data/species.csv -t data/taxas_eHMOD.csv -o output
 ```
-The following files are generated:
+The following file is generated:
 
-* file 1
-* file 2
-
+* $output/Species_OTU_seqs_consensus.csv: Consensus of taxaonomic sequences using the [_ConsensusSequence_] (https://rdrr.io/bioc/DECIPHER/man/ConsensusSequence.html) function from DECIPHER Bioconductor package.
 
 
 ### **TADA_preprocess.py: Produce a rooted guided tree in newick format (FastTree).**
@@ -109,8 +106,11 @@ $ python TADA_preprocess.py -c output_3/Species_OTU_seqs_consensus.csv -s data/s
 
 The following files are generated:
 
-* file 1
-* file 2
+* $output/TADA/taxa_species.fasta: Taxonomic sequences in FASTA format.
+* $output/TADA/taxa_species_mafft.fasta: Taxonomic sequences after Multiple Sequence Alignment with MAFFT v7.490.
+* $output/TADA/taxa_species_tree.nwk: Approximately-Maximum-Likelihood constructed tree based on the align sequences using FastTree version 2.1.10.
+
+
 
 
 ### **Machine Learning Classifier workflow**
@@ -165,17 +165,31 @@ optional arguments:
                         number of iterations [DEFAULT:10]
 ```
 
-*Example*
+*Examples*
 
 ```
- $ python NestedCV_pipeline.py -i data/species.csv -o output -m data/metadata.tsv -target smoking_status -id SRR -t 7 -r output_3/TADA/taxa_species_tree.nwk -ml KNN -a TADA -iter 1
+# 1) To run with all models and augmentation techniques:
+$ python NestedCV_pipeline.py -i data/species.csv -o output_3 -m data/metadata.tsv -target smoking_status -id SRR -t 4 -r output/TADA/taxa_species_tree.nwk -iter 10
+
+# 2) To run with two models and two augmentation techniques:
+$ python NestedCV_pipeline.py -i data/species.csv -o output_3 -m data/metadata.tsv -target smoking_status -id SRR -t 4 -r output/TADA/taxa_species_tree.nwk -iter 10
 ```
+From step 1 and 2 the following files are generated:
 
-The following files are generated:
+* $output/mean_results_train.txt: Table of mean probabilities used on each combination of augmentation and machine learning model technique, AUC and MCC with _std_ (standard deviation)
+* $output/mcc_boxplot.png: Boxplot containing same values of mean_results_train.txt but with Matthews Correlation Coefficient.
+* $output/auc_boxplot.png: Boxplot containing same values of mean_results_train.txt but with The Aurea Under the Curve.
 
-* file 1
-* file 2
+#### Note: Step 1 or 2 allows you to visualize prediction score using Matthews Correlation Coefficient (MCC) and The Area-Under the Curve (AUC). Once you have chosen the best option of model + augmentation technique you can use it in step 3 to train only with your best combination and see predicted values with a random subset (20%) of your data (unseen). For more information please see scheme from the paper about Nested Cross-validation approach.  
 
+```
+# 3) Select one model and augmentation technique.
+$ python NestedCV_pipeline.py -i data/species.csv -o output -m data/metadata.tsv -target smoking_status -id SRR -t 7 -r output_3/TADA/taxa_species_tree.nwk -ml KNN -a TADA -iter 10
+```
+From step 3 the following files are generated:
+
+* $output/MODEL/: This folder will contain the models use from step 3. Given the augmentation and machine learning model technique. 
+* $output/MODEL/probs_test.txt: Predicted probabilities used in 20% of random samples from your data used as test against the rest of the models used in the Nest-Cross validation approach.
 
 
 
