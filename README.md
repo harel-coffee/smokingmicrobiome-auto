@@ -15,7 +15,7 @@ We implemented a Nested Cross-Validation method together with augmentation techn
 
 ## Requirements
 
-#### Operating systems: Tested on Ubuntu 18.04LTS but can work on MacOS and Windows
+#### Operating systems: Tested on Ubuntu 18.04LTS and macOS Big Sur v11.6
 #### Software: Make sure to install miniconda3 before to proceed. for additional information see the miniconda compatible to your system. https://docs.conda.io/en/latest/miniconda.html
 
     # Please run the following three steps (compulsory)
