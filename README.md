@@ -1,6 +1,4 @@
-
-# Addressing class imbalance in microbiome-based classification using data augmentation and machine learning with smoking habit prediction from saliva as example
-
+# Prediction of smoking habits from class imbalanced saliva microbiome data using data augmentation and machine learning
 
 #### Celia Díez López, Diego Montiel González, Athina Vidaki, Manfred Kayser
 Erasmus MC University Medical Center Rotterdam, Department of Genetic Identification, Rotterdam, The Netherlands.
@@ -192,9 +190,4 @@ From step 3 the following files are generated:
 * $output/MODEL/probs_test.txt: Predicted probabilities used in 20% of random samples from your data used as test against the rest of the models used in the Nest-Cross validation approach.
 
 
-
-contact at genid@erasmusmc.nl for any questions or issues concerning the scripts.
-
-
-
-
+contact at diego.montielglez@gmail.com for any questions or issues concerning the scripts.
