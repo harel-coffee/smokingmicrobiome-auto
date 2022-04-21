@@ -318,11 +318,10 @@ def process_metrics_df(metrics_models, type_str):
 def smote_both(X_train, y_train):
                 
     t = round(abs(min(dict(Counter(y_train)).values()) - max(dict(Counter(y_train)).values())))
-    
     t_min = min(dict(Counter(y_train)).values())
     t_max = max(dict(Counter(y_train)).values())        
-    over = SMOTE(sampling_strategy=(t-t_min)/t_max)
-    under = RandomUnderSampler(sampling_strategy=(t_max-t)/t_min)        
+    over = SMOTE(sampling_strategy=(abs(t-t_min)/t_max))
+    under = RandomUnderSampler(sampling_strategy=((t_max-t)/t_min))        
     steps = [('o', over), ('u', under)]
     pipeline = Pipeline(steps=steps)        
     X_train_smote, y_train_smote = pipeline.fit_resample(X_train, y_train)
@@ -334,9 +333,9 @@ def adasyn_both(X_train, y_train):
                 
     t = round(abs(min(dict(Counter(y_train)).values()) - max(dict(Counter(y_train)).values())))    
     t_min = min(dict(Counter(y_train)).values())
-    t_max = max(dict(Counter(y_train)).values())        
-    over = ADASYN(sampling_strategy=(t-t_min)/t_max)
-    under = RandomUnderSampler(sampling_strategy=(t_max-t)/t_min)        
+    t_max = max(dict(Counter(y_train)).values())    
+    over = ADASYN(sampling_strategy=(abs(t-t_min)/t_max))
+    under = RandomUnderSampler(sampling_strategy=((t_max-t)/t_min))        
     steps = [('o', over), ('u', under)]
     pipeline = Pipeline(steps=steps)        
     X_train_smote, y_train_smote = pipeline.fit_resample(X_train, y_train)
